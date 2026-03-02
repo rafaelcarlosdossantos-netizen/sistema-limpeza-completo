@@ -1,5 +1,5 @@
 export default {
-  // Configuração mínima para o Vite funcionar na Vercel
+  // Configuração ultra-simples para destravar a Vercel
   build: {
     outDir: 'dist'
   }
