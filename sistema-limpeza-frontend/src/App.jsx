@@ -1,6 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 function App() {
+  const [status, setStatus] = useState('Conectando...')
+  const API_URL = 'https://sistema-limpeza-completo.vercel.app/api'
+
+  useEffect(( ) => {
+    fetch(API_URL)
+      .then(res => res.json())
+      .then(data => setStatus(data.status))
+      .catch(() => setStatus('Erro na conexão'))
+  }, [])
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'sans-serif' }}>
       <div style={{ maxWidth: '400px', width: '100%', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', padding: '40px', textAlign: 'center' }}>
@@ -13,7 +23,7 @@ function App() {
         </p>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <button style={{ width: '100%', padding: '12px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>
+          <button onClick={() => alert('Acessando o Painel...')} style={{ width: '100%', padding: '12px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>
             Acessar Painel
           </button>
           <button style={{ width: '100%', padding: '12px', backgroundColor: 'white', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>
@@ -23,7 +33,7 @@ function App() {
         
         <div style={{ mt: '30px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', marginTop: '25px' }}>
           <p style={{ fontSize: '12px', color: '#9ca3af' }}>
-            Status do Servidor: <span style={{ color: '#10b981', fontWeight: 'bold' }}>Online</span>
+            Status do Servidor: <span style={{ color: status === 'Erro na conexão' ? '#ef4444' : '#10b981', fontWeight: 'bold' }}>{status}</span>
           </p>
         </div>
       </div>
