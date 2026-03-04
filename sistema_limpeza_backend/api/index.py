@@ -3,18 +3,17 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 
-# Inicialização simplificada
+# Inicialização com permissão total de acesso (CORS)
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
-# Configuração do Banco de Dados (Usando pasta temporária da Vercel)
+# Configuração do Banco de Dados
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/sistema_limpeza.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'dev_key_123'
 
 db = SQLAlchemy(app)
 
-# Rota de teste para confirmar que está online
 @app.route('/api')
 def index():
     return jsonify({
@@ -23,10 +22,9 @@ def index():
         "database": "Conectado"
     })
 
-# Rota raiz para evitar o erro 404 na página inicial
 @app.route('/')
 def home():
-    return jsonify({"message": "Backend do Sistema de Limpeza funcionando! Use /api para testar."})
+    return jsonify({"message": "Backend Online! Use /api para testar."})
 
-# Se precisar das outras rotas depois, nós as adicionaremos uma a uma.
-# O importante agora é o sistema "dar o boot".
+# Garante que o app seja exportado corretamente para a Vercel
+app = app
