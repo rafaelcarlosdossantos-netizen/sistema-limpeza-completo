@@ -1,28 +1,29 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8">
-        <h1 className="text-2xl font-bold text-center text-blue-600 mb-6">
+    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'sans-serif' }}>
+      <div style={{ maxWidth: '400px', width: '100%', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', padding: '40px', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2563eb', marginBottom: '20px' }}>
           Sistema de Gestão de Limpeza
         </h1>
         
-        <div className="space-y-4">
-          <p className="text-gray-600 text-center">
-            Bem-vindo ao seu novo sistema de gestão.
-          </p>
-          
-          <div className="grid grid-cols-1 gap-4">
-            <Button className="w-full">Acessar Painel</Button>
-            <Button variant="outline" className="w-full">Configurações</Button>
-          </div>
+        <p style={{ color: '#4b5563', marginBottom: '30px' }}>
+          Bem-vindo ao seu novo sistema de gestão.
+        </p>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <button style={{ width: '100%', padding: '12px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>
+            Acessar Painel
+          </button>
+          <button style={{ width: '100%', padding: '12px', backgroundColor: 'white', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>
+            Configurações
+          </button>
         </div>
         
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <p className="text-xs text-center text-gray-400">
-            Status do Servidor: <span className="text-green-500">Online</span>
+        <div style={{ mt: '30px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', marginTop: '25px' }}>
+          <p style={{ fontSize: '12px', color: '#9ca3af' }}>
+            Status do Servidor: <span style={{ color: '#10b981', fontWeight: 'bold' }}>Online</span>
           </p>
         </div>
       </div>
