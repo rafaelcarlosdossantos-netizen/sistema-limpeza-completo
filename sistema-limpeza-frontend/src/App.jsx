@@ -1,35 +1,32 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import { Button } from '@/components/ui/button.jsx'
-import './App.css'
+import { Button } from '@/components/ui/button'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-lg shadow-xl p-8">
+        <h1 className="text-2xl font-bold text-center text-blue-600 mb-6">
+          Sistema de Gestão de Limpeza
+        </h1>
+        
+        <div className="space-y-4">
+          <p className="text-gray-600 text-center">
+            Bem-vindo ao seu novo sistema de gestão.
+          </p>
+          
+          <div className="grid grid-cols-1 gap-4">
+            <Button className="w-full">Acessar Painel</Button>
+            <Button variant="outline" className="w-full">Configurações</Button>
+          </div>
+        </div>
+        
+        <div className="mt-8 pt-6 border-t border-gray-200">
+          <p className="text-xs text-center text-gray-400">
+            Status do Servidor: <span className="text-green-500">Online</span>
+          </p>
+        </div>
       </div>
-      <h1>Vite + React</h1>
-      <div>
-        <Button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </Button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </div>
   )
 }
 
