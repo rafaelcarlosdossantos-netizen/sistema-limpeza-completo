@@ -3,32 +3,41 @@ import { useState, useEffect } from 'react'
 function App() {
   const [view, setView] = useState('home')
   const [status, setStatus] = useState('Conectando...')
+  const [servicos, setServicos] = useState([])
   const [novoCliente, setNovoCliente] = useState({ cliente: '', data: '', valor: '' })
-  const API_URL = 'https://sistema-limpeza-completo.vercel.app/api'
+  const API_URL = 'https://sistema-limpeza-completo.vercel.app/api/servicos'
 
-  const [servicos, setServicos] = useState([
-    { id: 1, cliente: 'João Silva', data: '2024-03-20', status: 'Agendado', valor: 'R$ 150,00' },
-    { id: 2, cliente: 'Maria Oliveira', data: '2024-03-21', status: 'Concluído', valor: 'R$ 200,00' }
-  ] )
-
-  useEffect(() => {
+  // BUSCAR DADOS DO SERVIDOR
+  const carregarServicos = ( ) => {
     fetch(API_URL)
       .then(res => res.json())
-      .then(data => setStatus(data.status))
+      .then(data => {
+        setServicos(data)
+        setStatus('Sistema Online')
+      })
       .catch(() => setStatus('Erro na conexão'))
+  }
+
+  useEffect(() => {
+    carregarServicos()
   }, [])
 
+  // SALVAR NO BANCO DE DADOS REAL
   const handleSalvar = (e) => {
     e.preventDefault()
-    const novo = {
-      id: servicos.length + 1,
-      ...novoCliente,
-      status: 'Agendado'
-    }
-    setServicos([...servicos, novo])
-    setNovoCliente({ cliente: '', data: '', valor: '' })
-    setView('painel')
-    alert('Agendamento salvo com sucesso!')
+    fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(novoCliente)
+    })
+    .then(res => res.json())
+    .then(() => {
+      carregarServicos() // Atualiza a lista vindo do banco
+      setNovoCliente({ cliente: '', data: '', valor: '' })
+      setView('painel')
+      alert('Agendamento salvo no Banco de Dados!')
+    })
+    .catch(() => alert('Erro ao salvar no servidor'))
   }
 
   // TELA INICIAL
@@ -59,7 +68,7 @@ function App() {
             <input required type="date" value={novoCliente.data} onChange={e => setNovoCliente({...novoCliente, data: e.target.value})} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
             <input required placeholder="Valor (ex: R$ 150,00)" value={novoCliente.valor} onChange={e => setNovoCliente({...novoCliente, valor: e.target.value})} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-              <button type="submit" style={{ flex: 1, padding: '12px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>Salvar</button>
+              <button type="submit" style={{ flex: 1, padding: '12px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>Salvar no Banco</button>
               <button type="button" onClick={() => setView('painel')} style={{ flex: 1, padding: '12px', backgroundColor: '#6b7280', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>Cancelar</button>
             </div>
           </form>
@@ -87,14 +96,18 @@ function App() {
               </tr>
             </thead>
             <tbody>
-              {servicos.map(s => (
-                <tr key={s.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ padding: '12px', fontWeight: '500' }}>{s.cliente}</td>
-                  <td style={{ padding: '12px' }}>{s.data}</td>
-                  <td style={{ padding: '12px' }}><span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '12px', backgroundColor: s.status === 'Concluído' ? '#dcfce7' : '#fef9c3', color: s.status === 'Concluído' ? '#166534' : '#854d0e' }}>{s.status}</span></td>
-                  <td style={{ padding: '12px' }}>{s.valor}</td>
-                </tr>
-              ))}
+              {servicos.length === 0 ? (
+                <tr><td colSpan="4" style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>Nenhum serviço cadastrado no banco.</td></tr>
+              ) : (
+                servicos.map(s => (
+                  <tr key={s.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '12px', fontWeight: '500' }}>{s.cliente}</td>
+                    <td style={{ padding: '12px' }}>{s.data}</td>
+                    <td style={{ padding: '12px' }}><span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '12px', backgroundColor: s.status === 'Concluído' ? '#dcfce7' : '#fef9c3', color: s.status === 'Concluído' ? '#166534' : '#854d0e' }}>{s.status}</span></td>
+                    <td style={{ padding: '12px' }}>{s.valor}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
           <button onClick={() => setView('novo')} style={{ marginTop: '20px', width: '100%', padding: '12px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>+ Novo Agendamento</button>
