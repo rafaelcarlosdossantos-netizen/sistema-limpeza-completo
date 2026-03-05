@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react'
 
 function App() {
-  const [view, setView] = useState('home')
+  const [view, setView] = useState('login') // Começa na tela de login
+  const [isLogged, setIsLogged] = useState(false)
   const [status, setStatus] = useState('Conectando...')
   const [servicos, setServicos] = useState([])
+  const [loginData, setLoginData] = useState({ usuario: '', senha: '' })
   const [novoCliente, setNovoCliente] = useState({ cliente: '', data: '', valor: '' })
-  const API_URL = 'https://sistema-limpeza-completo.vercel.app/api/servicos'
+  
+  const API_BASE = 'https://sistema-limpeza-completo.vercel.app/api'
 
   // BUSCAR DADOS DO SERVIDOR
   const carregarServicos = ( ) => {
-    fetch(API_URL)
+    fetch(`${API_BASE}/servicos`)
       .then(res => res.json())
       .then(data => {
         setServicos(data)
@@ -18,46 +21,62 @@ function App() {
       .catch(() => setStatus('Erro na conexão'))
   }
 
-  useEffect(() => {
-    carregarServicos()
-  }, [])
+  // FUNÇÃO DE LOGIN
+  const handleLogin = (e) => {
+    e.preventDefault()
+    fetch(`${API_BASE}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(loginData)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        setIsLogged(true)
+        setView('painel')
+        carregarServicos()
+      } else {
+        alert('Usuário ou senha incorretos!')
+      }
+    })
+    .catch(() => alert('Erro ao conectar com o servidor'))
+  }
 
-  // SALVAR NO BANCO DE DADOS REAL
+  // SALVAR NO BANCO DE DADOS
   const handleSalvar = (e) => {
     e.preventDefault()
-    fetch(API_URL, {
+    fetch(`${API_BASE}/servicos`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(novoCliente)
     })
     .then(res => res.json())
     .then(() => {
-      carregarServicos() // Atualiza a lista vindo do banco
+      carregarServicos()
       setNovoCliente({ cliente: '', data: '', valor: '' })
       setView('painel')
-      alert('Agendamento salvo no Banco de Dados!')
+      alert('Agendamento salvo com sucesso!')
     })
-    .catch(() => alert('Erro ao salvar no servidor'))
   }
 
-  // TELA INICIAL
-  if (view === 'home') {
+  // --- TELA DE LOGIN ---
+  if (!isLogged) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'sans-serif' }}>
-        <div style={{ maxWidth: '400px', width: '100%', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', padding: '40px', textAlign: 'center' }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: '#2563eb', marginBottom: '20px' }}>Sistema de Gestão de Limpeza</h1>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <button onClick={() => setView('painel')} style={{ width: '100%', padding: '12px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>Acessar Painel</button>
-          </div>
-          <div style={{ marginTop: '25px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
-            <p style={{ fontSize: '12px', color: '#9ca3af' }}>Status do Servidor: <span style={{ color: '#10b981', fontWeight: 'bold' }}>{status}</span></p>
-          </div>
+      <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', fontFamily: 'sans-serif' }}>
+        <div style={{ maxWidth: '350px', width: '100%', backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', padding: '40px' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 'bold', color: '#2563eb', marginBottom: '25px', textAlign: 'center' }}>Acesso ao Sistema</h1>
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <input required placeholder="Usuário" value={loginData.usuario} onChange={e => setLoginData({...loginData, usuario: e.target.value})} style={{ padding: '12px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+            <input required type="password" placeholder="Senha" value={loginData.senha} onChange={e => setLoginData({...loginData, senha: e.target.value})} style={{ padding: '12px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
+            <button type="submit" style={{ padding: '12px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>Entrar</button>
+          </form>
+          <p style={{ fontSize: '11px', color: '#9ca3af', marginTop: '20px', textAlign: 'center' }}>Status: {status}</p>
         </div>
       </div>
     )
   }
 
-  // TELA DE FORMULÁRIO
+  // --- TELA DE NOVO AGENDAMENTO ---
   if (view === 'novo') {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', padding: '40px', fontFamily: 'sans-serif' }}>
@@ -68,7 +87,7 @@ function App() {
             <input required type="date" value={novoCliente.data} onChange={e => setNovoCliente({...novoCliente, data: e.target.value})} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
             <input required placeholder="Valor (ex: R$ 150,00)" value={novoCliente.valor} onChange={e => setNovoCliente({...novoCliente, valor: e.target.value})} style={{ padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db' }} />
             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-              <button type="submit" style={{ flex: 1, padding: '12px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>Salvar no Banco</button>
+              <button type="submit" style={{ flex: 1, padding: '12px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>Salvar</button>
               <button type="button" onClick={() => setView('painel')} style={{ flex: 1, padding: '12px', backgroundColor: '#6b7280', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>Cancelar</button>
             </div>
           </form>
@@ -77,13 +96,13 @@ function App() {
     )
   }
 
-  // TELA DO PAINEL
+  // --- TELA DO PAINEL ---
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', padding: '40px', fontFamily: 'sans-serif' }}>
       <div style={{ maxWidth: '900px', margin: '0 auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
           <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#1e3a8a' }}>Painel de Serviços</h1>
-          <button onClick={() => setView('home')} style={{ padding: '8px 16px', backgroundColor: '#6b7280', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Sair</button>
+          <button onClick={() => {setIsLogged(false); setView('login')}} style={{ padding: '8px 16px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Sair</button>
         </div>
         <div style={{ backgroundColor: 'white', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', padding: '20px' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -96,18 +115,14 @@ function App() {
               </tr>
             </thead>
             <tbody>
-              {servicos.length === 0 ? (
-                <tr><td colSpan="4" style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>Nenhum serviço cadastrado no banco.</td></tr>
-              ) : (
-                servicos.map(s => (
-                  <tr key={s.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    <td style={{ padding: '12px', fontWeight: '500' }}>{s.cliente}</td>
-                    <td style={{ padding: '12px' }}>{s.data}</td>
-                    <td style={{ padding: '12px' }}><span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '12px', backgroundColor: s.status === 'Concluído' ? '#dcfce7' : '#fef9c3', color: s.status === 'Concluído' ? '#166534' : '#854d0e' }}>{s.status}</span></td>
-                    <td style={{ padding: '12px' }}>{s.valor}</td>
-                  </tr>
-                ))
-              )}
+              {servicos.map(s => (
+                <tr key={s.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                  <td style={{ padding: '12px', fontWeight: '500' }}>{s.cliente}</td>
+                  <td style={{ padding: '12px' }}>{s.data}</td>
+                  <td style={{ padding: '12px' }}><span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '12px', backgroundColor: s.status === 'Concluído' ? '#dcfce7' : '#fef9c3', color: s.status === 'Concluído' ? '#166534' : '#854d0e' }}>{s.status}</span></td>
+                  <td style={{ padding: '12px' }}>{s.valor}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
           <button onClick={() => setView('novo')} style={{ marginTop: '20px', width: '100%', padding: '12px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>+ Novo Agendamento</button>
