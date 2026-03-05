@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 
 function App() {
-  const [view, setView] = useState('login') // Começa na tela de login
+  const [view, setView] = useState('login')
   const [isLogged, setIsLogged] = useState(false)
   const [status, setStatus] = useState('Conectando...')
   const [servicos, setServicos] = useState([])
   const [loginData, setLoginData] = useState({ usuario: '', senha: '' })
   const [novoCliente, setNovoCliente] = useState({ cliente: '', data: '', valor: '' })
+  const [editandoServico, setEditandoServico] = useState(null) // Estado para o serviço sendo editado
   
   const API_BASE = 'https://sistema-limpeza-completo.vercel.app/api'
 
@@ -57,6 +58,42 @@ function App() {
       setView('painel')
       alert('Agendamento salvo com sucesso!')
     })
+  }
+
+  // FUNÇÃO PARA EDITAR SERVIÇO
+  const handleEditar = (servico) => {
+    setEditandoServico({ ...servico }) // Copia o serviço para edição
+  }
+
+  // FUNÇÃO PARA SALVAR EDIÇÃO
+  const handleSalvarEdicao = (e) => {
+    e.preventDefault()
+    fetch(`${API_BASE}/servicos/${editandoServico.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editandoServico)
+    })
+    .then(res => res.json())
+    .then(() => {
+      carregarServicos()
+      setEditandoServico(null) // Fecha o modal de edição
+      alert('Serviço atualizado com sucesso!')
+    })
+    .catch(() => alert('Erro ao atualizar serviço'))
+  }
+
+  // FUNÇÃO PARA EXCLUIR SERVIÇO
+  const handleExcluir = (id) => {
+    if (window.confirm('Tem certeza que deseja excluir este agendamento?')) {
+      fetch(`${API_BASE}/servicos/${id}`, {
+        method: 'DELETE',
+      })
+      .then(() => {
+        carregarServicos()
+        alert('Serviço excluído com sucesso!')
+      })
+      .catch(() => alert('Erro ao excluir serviço'))
+    }
   }
 
   // --- TELA DE LOGIN ---
@@ -112,6 +149,7 @@ function App() {
                 <th style={{ padding: '12px', color: '#6b7280' }}>Data</th>
                 <th style={{ padding: '12px', color: '#6b7280' }}>Status</th>
                 <th style={{ padding: '12px', color: '#6b7280' }}>Valor</th>
+                <th style={{ padding: '12px', color: '#6b7280' }}>Ações</th> {/* Nova coluna de Ações */}
               </tr>
             </thead>
             <tbody>
@@ -121,6 +159,10 @@ function App() {
                   <td style={{ padding: '12px' }}>{s.data}</td>
                   <td style={{ padding: '12px' }}><span style={{ padding: '4px 8px', borderRadius: '12px', fontSize: '12px', backgroundColor: s.status === 'Concluído' ? '#dcfce7' : '#fef9c3', color: s.status === 'Concluído' ? '#166534' : '#854d0e' }}>{s.status}</span></td>
                   <td style={{ padding: '12px' }}>{s.valor}</td>
+                  <td style={{ padding: '12px' }}>
+                    <button onClick={() => handleEditar(s)} style={{ padding: '6px 10px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', marginRight: '5px' }}>Editar</button>
+                    <button onClick={() => handleExcluir(s.id)} style={{ padding: '6px 10px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Excluir</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -128,6 +170,37 @@ function App() {
           <button onClick={() => setView('novo')} style={{ marginTop: '20px', width: '100%', padding: '12px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>+ Novo Agendamento</button>
         </div>
       </div>
+
+      {/* Modal de Edição */}
+      {editandoServico && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '12px', boxShadow: '0 5px 15px rgba(0,0,0,0.3)', maxWidth: '400px', width: '100%' }}>
+            <h2 style={{ marginBottom: '20px', color: '#1e3a8a' }}>Editar Agendamento</h2>
+            <form onSubmit={handleSalvarEdicao} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <label>Cliente:
+                <input required value={editandoServico.cliente} onChange={e => setEditandoServico({...editandoServico, cliente: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '5px' }} />
+              </label>
+              <label>Data:
+                <input required type="date" value={editandoServico.data} onChange={e => setEditandoServico({...editandoServico, data: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '5px' }} />
+              </label>
+              <label>Valor:
+                <input required value={editandoServico.valor} onChange={e => setEditandoServico({...editandoServico, valor: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '5px' }} />
+              </label>
+              <label>Status:
+                <select value={editandoServico.status} onChange={e => setEditandoServico({...editandoServico, status: e.target.value})} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', marginTop: '5px' }}>
+                  <option value="Agendado">Agendado</option>
+                  <option value="Concluído">Concluído</option>
+                  <option value="Cancelado">Cancelado</option>
+                </select>
+              </label>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                <button type="submit" style={{ flex: 1, padding: '12px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>Salvar Edição</button>
+                <button type="button" onClick={() => setEditandoServico(null)} style={{ flex: 1, padding: '12px', backgroundColor: '#6b7280', color: 'white', border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>Cancelar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
