@@ -7,9 +7,9 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Banco de Dados
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////tmp/sistema_limpeza.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'chave_mestra_789'
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/sistema_limpeza.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SECRET_KEY"] = "chave_mestra_789"
 
 db = SQLAlchemy(app)
 
@@ -18,38 +18,58 @@ class Servico(db.Model):
     cliente = db.Column(db.String(100), nullable=False)
     data = db.Column(db.String(20), nullable=False)
     valor = db.Column(db.String(20), nullable=False)
-    status = db.Column(db.String(20), default='Agendado')
+    status = db.Column(db.String(20), default="Agendado")
 
 with app.app_context():
     db.create_all()
 
-# --- NOVA ROTA DE LOGIN ---
-@app.route('/api/login', methods=['POST'])
+# --- ROTA DE LOGIN ---
+@app.route("/api/login", methods=["POST"])
 def login():
     dados = request.json
-    # Usuário e Senha definidos por você (Pode mudar aqui!)
     USUARIO_CORRETO = "admin"
     SENHA_CORRETA = "123456"
     
-    if dados.get('usuario') == USUARIO_CORRETO and dados.get('senha') == SENHA_CORRETA:
+    if dados.get("usuario") == USUARIO_CORRETO and dados.get("senha") == SENHA_CORRETA:
         return jsonify({"success": True, "message": "Login realizado!"})
     else:
         return jsonify({"success": False, "message": "Usuário ou senha incorretos"}), 401
 
-@app.route('/api/servicos', methods=['GET'])
+# --- ROTAS DE SERVIÇOS ---
+@app.route("/api/servicos", methods=["GET"])
 def listar_servicos():
     servicos = Servico.query.all()
     return jsonify([{"id": s.id, "cliente": s.cliente, "data": s.data, "valor": s.valor, "status": s.status} for s in servicos])
 
-@app.route('/api/servicos', methods=['POST'])
+@app.route("/api/servicos", methods=["POST"])
 def adicionar_servico():
     dados = request.json
-    novo = Servico(cliente=dados['cliente'], data=dados['data'], valor=dados['valor'])
+    novo = Servico(cliente=dados["cliente"], data=dados["data"], valor=dados["valor"])
     db.session.add(novo)
     db.session.commit()
     return jsonify({"message": "Salvo!", "id": novo.id}), 201
 
-@app.route('/api')
+# --- NOVA ROTA: ATUALIZAR/EDITAR SERVIÇO ---
+@app.route("/api/servicos/<int:id>", methods=["PUT"])
+def atualizar_servico(id):
+    servico = Servico.query.get_or_404(id)
+    dados = request.json
+    servico.cliente = dados.get("cliente", servico.cliente)
+    servico.data = dados.get("data", servico.data)
+    servico.valor = dados.get("valor", servico.valor)
+    servico.status = dados.get("status", servico.status) # Permite atualizar o status
+    db.session.commit()
+    return jsonify({"message": "Serviço atualizado com sucesso!"})
+
+# --- NOVA ROTA: EXCLUIR SERVIÇO ---
+@app.route("/api/servicos/<int:id>", methods=["DELETE"])
+def excluir_servico(id):
+    servico = Servico.query.get_or_404(id)
+    db.session.delete(servico)
+    db.session.commit()
+    return jsonify({"message": "Serviço excluído com sucesso!"}), 204
+
+@app.route("/api")
 def index():
     return jsonify({"status": "Sistema Online", "auth": "Habilitada"})
 
